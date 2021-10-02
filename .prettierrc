@@ -1,0 +1,13 @@
+{
+  "singleQuote": true,
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": ["**/*.css", "**/*.scss", "**/*.html"],
+      "options": {
+        "singleQuote": false,
+        "printWidth": 140
+      }
+    }
+  ]
+}
