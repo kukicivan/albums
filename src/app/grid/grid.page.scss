@@ -1,0 +1,18 @@
+ion-col {
+  font-weight: 500;
+  text-align: center;
+  background: var(--ion-color-light-tint);
+  line-height: 30px;
+}
+
+ion-col:not(:first-child) {
+  border-left: 1px solid var(--ion-color-light-shade);
+}
+
+ion-row{
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+ion-row:not(:last-child){
+  margin-bottom: 10px;
+}
