@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { Camera, CameraResultType, CameraSource, ImageOptions, Photo } from '@capacitor/camera';
 import { Directory, Filesystem, ReadFileOptions, WriteFileOptions } from '@capacitor/filesystem';
 import { Storage } from '@capacitor/storage';
+import { Platform } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
 
 export interface PhotoStore {
   filepath: string;
@@ -24,7 +26,8 @@ export class PhotoService {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private PHOTO_STORAGE = 'photos';
 
-  constructor() {
+  constructor(private platform: Platform) {
+    this.platform = platform;
   }
 
   public async loadPhotos() {
@@ -32,17 +35,21 @@ export class PhotoService {
     const photoList = await Storage.get({ key: this.PHOTO_STORAGE });
     this.photos = JSON.parse(photoList.value) || [];
 
-    // Display the photo by reading into base64 format
-    for (const photo of this.photos) {
-      // Read each saved photo data from the filesystem
-      const fileOptions: ReadFileOptions = {
-        path: photo.filepath,
-        directory: Directory.Data
-      };
-      const readFile = await Filesystem.readFile(fileOptions);
+    // Easiest way to detect when running on the web:
+    // "when platform is NOT hybrid" do this"
+    if (!this.platform.is('hybrid')) {
+      // Display the photo by reading into  base64 format
+      for (const photo of this.photos) {
+        // Read each saved photo data from the filesystem
+        const fileOptions: ReadFileOptions = {
+          path: photo.filepath,
+          directory: Directory.Data
+        };
+        const readFile = await Filesystem.readFile(fileOptions);
 
-      // Web platform only: Load the photo as base64 data
-      photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
+        // Web platform only: Load the photo as base64 data
+        photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
+      }
     }
   }
 
@@ -85,20 +92,39 @@ export class PhotoService {
     };
     const savedFile = await Filesystem.writeFile(fileOptions);
 
-    // Use webPath to display the new image instead of base64
-    // since it is already loaded into memory
-    return {
-      filepath: filename,
-      webviewPath: cameraPhoto.webPath
-    };
+    if (this.platform.is('hybrid')) {
+      // Display the new image by rewriting 'file://' path to HTTP
+      // Details: https://ionicframework.com/docs/building/webview#file-protocol
+      return {
+        filepath: savedFile.uri,
+        webviewPath: Capacitor.convertFileSrc(savedFile.uri)
+      };
+    } else {
+      // Use webPath to display the new image instead of base64
+      // since it is already loaded into memory
+      return {
+        filepath: filename,
+        webviewPath: cameraPhoto.webPath
+      };
+    }
   }
 
   private async readAsBase64(cameraPhoto: Photo) {
-    // Fetch the photo, read as a blob, then convert to base64 format
-    const response = await fetch(cameraPhoto.webPath);
-    const blob = await response.blob();
+    // Hybrid will detect Capacitor or Cordova
+    if (this.platform.is('hybrid')) {
+      // Read the file in base64 format
+      const file = await Filesystem.readFile({
+        path: cameraPhoto.path
+      });
 
-    return await this.convertBlobToBase64(blob) as string;
+      return file.data;
+    } else {
+      // Fetch the photo, read as a blob, then convert to base64 format
+      const response = await fetch(cameraPhoto.webPath);
+      const blob = await response.blob();
+
+      return await this.convertBlobToBase64(blob) as string;
+    }
   }
 }
 
