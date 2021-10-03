@@ -53,6 +53,21 @@ export class PhotoService {
     }
   }
 
+  public async deletePhoto(photo: PhotoStore, position: number) {
+    // Remove this photo from photo reference data array
+    this.photos.splice(position, 1);
+
+    // Save to local storage
+    this.saveToLocalStorage(this.photos);
+
+    // Delete photo from the filesystem
+    const filename = photo.filepath.substr(photo.filepath.lastIndexOf('/') + 1);
+
+    await Filesystem.deleteFile({
+      path: filename,
+      directory: Directory.Data
+    });
+  }
 
   public async addNewToAlbum() {
     // Take a photo
@@ -63,11 +78,7 @@ export class PhotoService {
     this.photos.unshift(savedPhoto);
 
     // Save to local storage
-    Storage.set({
-      key: this.PHOTO_STORAGE,
-      value: JSON.stringify(this.photos)
-    });
-
+    this.saveToLocalStorage(this.photos);
   }
 
   convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {
@@ -125,6 +136,14 @@ export class PhotoService {
 
       return await this.convertBlobToBase64(blob) as string;
     }
+  }
+
+  // Save to local storage
+  private saveToLocalStorage(photos: PhotoStore[]) {
+    Storage.set({
+      key: this.PHOTO_STORAGE,
+      value: JSON.stringify(photos)
+    });
   }
 }
 
