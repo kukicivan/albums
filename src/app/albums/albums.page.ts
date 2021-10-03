@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { PhotoService } from '../services/photo.service';
 
 @Component({
   selector: 'app-albums',
@@ -7,10 +8,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AlbumsPage implements OnInit {
 
-  constructor() {
+  constructor(private photoService: PhotoService) {
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    await this.photoService.loadPhotos();
+  }
+
+  addPhotoToAlbum(): void {
+    this.photoService.addNewToAlbum().then(r => {
+      console.log('r', r);
+    });
   }
 
 }
