@@ -12,7 +12,7 @@ import { PhotoService, PhotoStore } from '../services/photo.service';
 export class AlbumsPage implements OnInit {
 
   constructor(
-    private photoService: PhotoService,
+    public photoService: PhotoService,
     private actionSheetController: ActionSheetController
   ) {
   }
