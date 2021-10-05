@@ -13,7 +13,10 @@ exports.config = {
     './src/**/*.e2e-spec.ts'
   ],
   capabilities: {
-    browserName: 'chrome'
+    browserName: 'chrome',
+    "chromeOptions": {
+      binary: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    },
   },
   directConnect: true,
   SELENIUM_PROMISE_MANAGER: false,
